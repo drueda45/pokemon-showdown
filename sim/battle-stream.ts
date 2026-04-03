@@ -208,6 +208,14 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 				battle.add('', '<<< error: ' + e.message);
 			}
 			break;
+		case 'editbattle':
+			try {
+				this.editbattle(message);
+				this.battle!.inputLog.push(`>editbattle ${message}`);
+			} catch (e: any) {
+				this.battle!.add('', '<<< error: ' + e.message);
+			}
+			break;
 		case 'requestlog':
 			this.push(`requesteddata\n${this.battle!.inputLog.join('\n')}`);
 			break;
@@ -232,6 +240,155 @@ export class BattleStream extends Streams.ObjectReadWriteStream<string> {
 			break;
 		default:
 			throw new Error(`Unrecognized command ">${type} ${message}"`);
+		}
+	}
+	editbattle(target: string) {
+		const battle = this.battle!;
+		const toID = battle.toID;
+		const getPlayer = (originalInput: string) => {
+			const input = toID(originalInput);
+			if (/^p[1-9]$/.test(input)) return battle.sides[parseInt(input.slice(1)) - 1];
+			if (/^[1-9]$/.test(input)) return battle.sides[parseInt(input) - 1];
+			for (const side of battle.sides) {
+				if (toID(side.name) === input) return side;
+			}
+			throw new Error(`Player "${originalInput}" not found`);
+		};
+		const getPokemon = (side: string | Side, input: string) => {
+			if (typeof side === 'string') side = getPlayer(side)!;
+
+			input = toID(input);
+			let out = null;
+			if (/^[1-9]$/.test(input)) out = side.pokemon[parseInt(input) - 1];
+			else out = side.pokemon.find(p => p.baseSpecies.id === input || p.species.id === input);
+			if (!out) throw new Error(`Pokemon "${side.name} ${input}" not found`);
+			return out;
+		};
+
+		let cmd;
+		[cmd, target] = Utils.splitFirst(target, ' ');
+		if (cmd.endsWith(',')) cmd = cmd.slice(0, -1);
+		const targets = target.split(',');
+		if (targets.length === 1 && targets[0] === '') targets.pop();
+		switch (cmd) {
+		case 'hp':
+		case 'h': {
+			if (targets.length !== 3) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, pokemon, value] = targets;
+			const p = getPokemon(toID(player), toID(pokemon));
+			p.sethp(parseInt(value));
+			if (p.isActive) battle.add('-damage', p, p.getHealth);
+			break;
+		}
+		case 'status':
+		case 's': {
+			if (targets.length !== 3) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, pokemon, value] = targets.map(toID);
+			const pl = getPlayer(player);
+			const p = getPokemon(player, pokemon);
+			p.setStatus(value);
+			if (!p.isActive) {
+				battle.add('', 'please ignore the above');
+				battle.add('-status', pl.active[0], pl.active[0].status, '[silent]');
+			}
+			break;
+		}
+		case 'pp': {
+			if (targets.length !== 4) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, pokemon, move, value] = targets;
+			const p = getPokemon(toID(player), toID(pokemon));
+			const moveData = p.getMoveData(toID(move));
+			if (!moveData) {
+				battle.add(`||<<< Error: Move "${move}" not found for Pokemon "${player} ${pokemon}"`);
+				return;
+			}
+			moveData.pp = parseInt(value);
+			break;
+		}
+		case 'boost':
+		case 'b': {
+			if (targets.length !== 4) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, pokemon, stat, value] = targets;
+			const p = getPokemon(toID(player), toID(pokemon));
+			const statID = toID(stat) as BoostID;
+			if (!['atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion'].includes(statID) || isNaN(parseInt(value))) {
+				battle.add(`||<<< Error: Invalid boost "${stat}:${value}"`);
+				return;
+			}
+			battle.boost({ [statID]: parseInt(value) }, p);
+			break;
+		}
+		case 'volatile':
+		case 'v': {
+			if (targets.length !== 3) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, pokemon, value] = targets.map(toID);
+			const p = getPokemon(player, pokemon);
+			p.addVolatile(value);
+			break;
+		}
+		case 'sidecondition':
+		case 'sc': {
+			if (targets.length !== 2) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [player, value] = targets.map(toID);
+			const side = getPlayer(player);
+			side.addSideCondition(value, 'debug');
+			break;
+		}
+		case 'fieldcondition': case 'pseudoweather':
+		case 'fc': {
+			if (targets.length !== 1) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [value] = targets.map(toID);
+			battle.field.addPseudoWeather(value, 'debug');
+			break;
+		}
+		case 'weather':
+		case 'w': {
+			if (targets.length !== 1) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [value] = targets.map(toID);
+			battle.field.setWeather(value, 'debug');
+			break;
+		}
+		case 'terrain':
+		case 't': {
+			if (targets.length !== 1) {
+				battle.add("||<<< Error: Incorrect command use");
+				return;
+			}
+			const [value] = targets.map(toID);
+			battle.field.setTerrain(value);
+			break;
+		}
+		case 'reseed': {
+			battle.resetRNG(target as PRNGSeed);
+			if (targets.length) battle.add(`||Reseeded to ${targets.join(',')}`);
+			break;
+		}
+		default:
+			throw new Error(`Unknown editbattle command: ${cmd}`);
 		}
 	}
 
