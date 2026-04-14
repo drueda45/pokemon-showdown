@@ -31,7 +31,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		mod: 'gen9',
 		team: 'random',
 		bestOfDefault: true,
-		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Illusion Level Mod'],
+		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Sleep Clause Mod', 'Illusion Level Mod', 'maxteamsize = 3', 'Adjust Level = 50'],
 	},
 	{
 		name: "[Gen 9] Unrated Random Battle",
@@ -3442,7 +3442,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		mod: 'sharedpower',
 		team: 'random',
 		bestOfDefault: true,
-		ruleset: ['[Gen 9] Random Battle', 'Team Preview', 'Max Team Size = 12', 'Picked Team Size = 6'],
+		ruleset: ['[Gen 9] Random Battle', 'Team Preview', '!! Max Team Size = 12', 'Picked Team Size = 6'],
 		onValidateRule() {
 			if (this.format.gameType !== 'singles') {
 				throw new Error(`Shared Power currently does not support ${this.format.gameType} battles.`);
