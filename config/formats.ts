@@ -174,14 +174,13 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		gameType: 'doubles',
 		team: 'random',
 		bestOfDefault: true,
-		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Illusion Level Mod', 'Sleep Clause Mod'],
+		ruleset: ['PotD', 'Obtainable', 'Species Clause', 'HP Percentage Mod', 'Cancel Mod', 'Illusion Level Mod', 'Sleep Clause Mod', 'Adjust Level = 50'],
 	},
 	{
 		name: "[Gen 9] Doubles OU",
 		mod: 'gen9',
 		gameType: 'doubles',
-		ruleset: ['Standard Doubles', 'Evasion Abilities Clause'],
-		banlist: ['DUber', 'Shadow Tag', 'Commander'],
+		ruleset: ['Terastal Clause'],
 	},
 	{
 		name: "[Gen 9] Doubles Ubers",
@@ -280,12 +279,18 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		ruleset: ['Standard'],
 		banlist: ['AG', 'Uber', 'Moody', 'Quick Claw', 'Baton Pass', 'Last Respects', 'Shed Tail'],
 	},
+	//{
+	//	name: "[Gen 9 Champions] UU",
+	//	mod: 'champions',
+	//	searchShow: false,
+	//	ruleset: ['[Gen 9 Champions] OU'],
+	//	banlist: ['OU', 'UUBL'],
+	//},
 	{
 		name: "[Gen 9 Champions] UU",
 		mod: 'champions',
-		searchShow: false,
-		ruleset: ['[Gen 9 Champions] OU'],
-		banlist: ['OU', 'UUBL'],
+		gameType: 'doubles',
+		ruleset: ['Standard'],
 	},
 	{
 		name: "[Gen 9 Champions] BSS Reg M-A",
